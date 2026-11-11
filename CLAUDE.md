@@ -23,8 +23,11 @@ dlinfer/
     quants/                # quantization patches (AWQ, etc.)
 ```
 
-lmdeploy lives in a sibling directory and is patched at import time via
-`framework/lmdeploy_ext/`.
+lmdeploy lives in a sibling directory. Non-Ascend vendors are still patched at
+import time via `framework/lmdeploy_ext/`. Ascend LMDeploy integration has moved
+to the paired LMDeploy native backend; this fork no longer installs its Ascend
+framework patches. Standalone Ascend vendor ops and runtime support remain.
+See `docs/ascend_native_migration.md` for the migration boundary.
 
 ## Commands
 

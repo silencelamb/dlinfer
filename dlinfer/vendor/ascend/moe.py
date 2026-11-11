@@ -332,11 +332,8 @@ def apply_mlp(
     # Graph capture cannot tolerate the host sync of the eager row-slicing path,
     # so capture always uses the catch-all path. Prefill keeps the cheaper eager
     # row-slicing path and can read real expert slices from packed weights.
-    from dlinfer.framework.lmdeploy_ext.cudagraph.ascend_cudagraph import (
-        AscendGraphRunner,
-    )
-
-    if AscendGraphRunner.capturing or _MOE_PREFILL_USE_CATCHALL:
+    # Standalone vendor operators must not import an LMDeploy framework patch.
+    if torch.npu.is_current_stream_capturing() or _MOE_PREFILL_USE_CATCHALL:
         return _apply_mlp_chunked_capturable(
             hidden_states,
             gate_up_weights,

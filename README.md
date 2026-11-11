@@ -1,6 +1,11 @@
 
 # 介绍
 
+> 本 fork 的 `codex/ascend-a3-native` 分支已将 LMDeploy 的 Ascend 集成迁入
+> [配套 LMDeploy 分支](https://github.com/silencelamb/lmdeploy/tree/codex/ascend-a3-native)，
+> 并删除对应 framework patch。Ascend 推理应使用原生 backend；本仓库继续保留独立 vendor 算子及其他厂商接入。
+> 下面的历史镜像/安装说明不代表该配套版本已通过实机验证，详见 [迁移说明](docs/ascend_native_migration.md)。
+
 dlinfer提供了一套将国产硬件接入大模型推理框架的解决方案。
 对上承接大模型推理框架，对下在eager模式下调用各厂商的融合算子，在graph模式下调用厂商的图引擎。
 在dlinfer中，我们根据主流大模型推理框架与主流硬件厂商的融合算子粒度，定义了大模型推理的融合算子接口。

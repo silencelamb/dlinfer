@@ -1,5 +1,7 @@
 # Ascend Ray NPU Resource Patch
 
+> 历史记录：本文引用迁移前的 dlinfer framework patch。配套清理后，不应将下列代码重新加入该入口；LMDeploy Ascend 集成已由原生 backend 承接，见 [迁移说明](ascend_native_migration.md)。
+
 本文记录一个可选的 Ray 初始化 patch。当前该 patch 默认不启用；如果在
 Ascend A2 等环境中遇到 Ray 无法为 LMDeploy placement group 分配 `NPU`
 资源的问题，可以尝试临时启用该 patch 进行验证。

@@ -1,5 +1,7 @@
 # Ascend CUDAGraph 全局状态与 RL Re-capture 生命周期
 
+> 历史记录：本文的 `AscendGraphRunner` 已迁入 LMDeploy，dlinfer 中的旧实现和测试已移除。本文保留为迁移前背景，当前入口与验证步骤见 [迁移说明](ascend_native_migration.md)。
+
 本文说明 DLINFER Ascend CUDAGraph 实现中以下两个全局变量的历史用途、生命周期，以及它们与 RL rollout re-capture 的关系：
 
 ```python
