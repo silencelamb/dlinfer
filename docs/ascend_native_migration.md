@@ -1,6 +1,6 @@
 # LMDeploy Ascend patch 退出 dlinfer
 
-本分支与 [silencelamb/lmdeploy 的 codex/ascend-a3-native](https://github.com/silencelamb/lmdeploy/tree/codex/ascend-a3-native) 配套使用。LMDeploy 原生 backend 已承接 A3 推理所需适配，本仓库不再维护第二套 import-time LMDeploy Ascend patch。**截至 2026-11-14，已补充 A3 独立算子验证；MACA/CAMB 实机验证仍未执行。**
+本分支与 [silencelamb/lmdeploy 的 dev/ascend-a3-native](https://github.com/silencelamb/lmdeploy/tree/dev/ascend-a3-native) 配套使用。LMDeploy 原生 backend 已承接 A3 推理所需适配，本仓库不再维护第二套 import-time LMDeploy Ascend patch。**截至 2026-11-14，已补充 A3 独立算子验证；MACA/CAMB 实机验证仍未执行。**
 
 ## A3 实测摘要
 
@@ -50,6 +50,6 @@ DEVICE=ascend DLINFER_BUILD_DICP=OFF python -m build \
 
 这里关闭了可选 DICP 构建，并跳过 Mac 无法安装的 NPU build dependency 检查；没有修改生产构建逻辑。产物是 **Mac 的打包检查产物**，不是 A3 可部署 wheel。Mac 阶段的 Python 3.12 用于 CPU/打包检查，dlinfer 的运行时 Python 约束仍以 `setup.py:125` 的 `>=3.10,<3.12` 为准；后来 A3 镜像也使用 Python 3.12，其超出声明的限制已在文首单列。受支持环境下的重新构建仍待完成。
 
-A3 推理直接安装配套 LMDeploy，不需要安装本 dlinfer 分支。独立 dlinfer 算子用户继续按原安装方法准备 torch_npu/CANN/NNAL；不得把已删除的 LMDeploy Ascend patch 补回入口。两套环境分开验证，完整步骤见 [LMDeploy 迁移与硬件验收说明](https://github.com/silencelamb/lmdeploy/blob/codex/ascend-a3-native/docs/zh_cn/advance/ascend_a3_migration.md)。
+A3 推理直接安装配套 LMDeploy，不需要安装本 dlinfer 分支。独立 dlinfer 算子用户继续按原安装方法准备 torch_npu/CANN/NNAL；不得把已删除的 LMDeploy Ascend patch 补回入口。两套环境分开验证，完整步骤见 [LMDeploy 迁移与硬件验收说明](https://github.com/silencelamb/lmdeploy/blob/dev/ascend-a3-native/docs/zh_cn/advance/ascend_a3_migration.md)。
 
 后续扩大 A3 验证时，继续运行 attention/RoPE/SFA tests，并增加 >1024 专家模型的实际 shape 和负载；已执行的小维度 MoE 测试范围见文首。旧 LMDeploy + 旧 dlinfer 的参考环境须固定上面的迁移前 commit。

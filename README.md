@@ -1,8 +1,8 @@
 
 # 介绍
 
-> 本 fork 的 `codex/ascend-a3-native` 分支已将 LMDeploy 的 Ascend 集成迁入
-> [配套 LMDeploy 分支](https://github.com/silencelamb/lmdeploy/tree/codex/ascend-a3-native)，
+> 本 fork 的 `dev/ascend-a3-native` 分支已将 LMDeploy 的 Ascend 集成迁入
+> [配套 LMDeploy 分支](https://github.com/silencelamb/lmdeploy/tree/dev/ascend-a3-native)，
 > 并删除对应 framework patch。Ascend 推理应使用原生 backend；本仓库继续保留独立 vendor 算子及其他厂商接入。
 > 下面的历史镜像/安装说明不代表该配套版本已通过实机验证，详见 [迁移说明](docs/ascend_native_migration.md)。
 
