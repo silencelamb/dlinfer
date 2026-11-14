@@ -1,6 +1,17 @@
 # LMDeploy Ascend patch 退出 dlinfer
 
-本分支与 [silencelamb/lmdeploy 的 codex/ascend-a3-native](https://github.com/silencelamb/lmdeploy/tree/codex/ascend-a3-native) 配套使用。LMDeploy 原生 backend 已承接 A3 推理所需适配，本仓库不再维护第二套 import-time LMDeploy Ascend patch。**本次仅完成 Mac 检查，没有 A3、MACA 或 CAMB 实机验证。**
+本分支与 [silencelamb/lmdeploy 的 codex/ascend-a3-native](https://github.com/silencelamb/lmdeploy/tree/codex/ascend-a3-native) 配套使用。LMDeploy 原生 backend 已承接 A3 推理所需适配，本仓库不再维护第二套 import-time LMDeploy Ascend patch。**截至 2026-11-14，已补充 A3 独立算子验证；MACA/CAMB 实机验证仍未执行。**
+
+## A3 实测摘要
+
+清理后的实测 commit 为 `05ede38ae879347be33c8f6ebb136d84f3f4ee88`，旧基线为下文 `3b909634`。本次发布只追加验证说明，保留该实测计算代码。
+
+- 独立环境未安装或导入 LMDeploy；framework 边界 CPU suite 为 16 passed。
+- 1056 专家、BF16、N32、hidden/intermediate64 的合成 MoE eager 与真实 NPUGraph capture/replay 共 6 项通过；更换 routing 后与 CPU reference 最大差为 0。这不代表完整大模型 checkpoint 性能通过。
+- standalone 算子 suite 为 25 passed / 3 failed：通过项含 16 个 CPU ring reference 和 9 个真实 NPU case；三个 paged/decode MLA case 与旧基线同样遇到 CANN keyRope 非连续错误。
+- 镜像 Python 3.12 / torch 2.10 超出部分依赖声明，pip check 非零；没有因此修改声明上界。独立 Transformers、DICP/ATB compiler 及其他硬件仍未验证。
+
+详细数据、命令及环境在配套 fork 的 [A3 验证文档分支](https://github.com/silencelamb/lmdeploy/tree/docs/ascend-a3-validation-20261114/docs/zh_cn/advance/ascend_a3_validation)。下文 Mac 记录是先前阶段的检查，不覆盖本段新增硬件证据。
 
 删除前的 dlinfer 基线为 `3b9096341a41e9d067104a39d914e47ca2d7ec50`。下表“原位置”均可用 `git show 3b909634:<文件>` 查看，不能把它当作清理后 HEAD 的现存文件。
 
@@ -22,7 +33,7 @@
 - 独立 Transformers 适配、DICP/ATB graph compiler 与其显式 graph-mode 适配未迁移，不在此次删除范围。Ascend 的普通 `lmdeploy_ext` 入口不再自动安装 Transformers hook。位置：`dlinfer/framework/transformers_ext/__init__.py:11`、`dlinfer/graph/dicp/vendor/AtbGraph/__init__.py:1`。
 - MACA/CAMB/PPU 的 device/graph 实现保持原文件内容；共同使用的 compilation/sampling helper 保留。位置：`dlinfer/framework/lmdeploy_ext/device/camb.py:1`、`dlinfer/framework/lmdeploy_ext/cudagraph/maca_cudagraph.py:1`、`camb_cudagraph.py:1`、`ppu_cudagraph.py:1`。
 
-独立 MoE 算子曾为查询 capture 状态而导入旧 AscendGraphRunner，间接触发整个 LMDeploy patch 包。现在使用 `torch.npu.is_current_stream_capturing()`，保留原 eager/catchall 两套计算和 `DLINFER_MOE_PREFILL_CATCHALL` 开关；真实捕获行为仍需 NPU 验证。位置：`dlinfer/vendor/ascend/moe.py:335`。基础依赖接口可在 [torch_npu 2.9 源码](https://github.com/Ascend/pytorch/blob/v2.9.0/torch_npu/npu/graphs.py#L62) 核对。
+独立 MoE 算子曾为查询 capture 状态而导入旧 AscendGraphRunner，间接触发整个 LMDeploy patch 包。现在使用 `torch.npu.is_current_stream_capturing()`，保留原 eager/catchall 两套计算和 `DLINFER_MOE_PREFILL_CATCHALL` 开关；上述 A3 合成数据已验证真实捕获与 replay。位置：`dlinfer/vendor/ascend/moe.py:335`。基础依赖接口可在 [torch_npu 2.9 源码](https://github.com/Ascend/pytorch/blob/v2.9.0/torch_npu/npu/graphs.py#L62) 核对。
 
 ## 检查与配套使用
 
@@ -37,8 +48,8 @@ DEVICE=ascend DLINFER_BUILD_DICP=OFF python -m build \
   --no-isolation --skip-dependency-check --outdir .git/ascend-dist
 ```
 
-这里关闭了可选 DICP 构建，并跳过 Mac 无法安装的 NPU build dependency 检查；没有修改生产构建逻辑。产物是 **Mac 的打包检查产物**，不是 A3 可部署 wheel。Python 3.12 仅用于本地 CPU/打包检查，dlinfer 的运行时 Python 约束仍以 `setup.py:125` 的 `>=3.10,<3.12` 为准。A3 上须用受支持的环境重新构建，并运行真实 kernel tests。
+这里关闭了可选 DICP 构建，并跳过 Mac 无法安装的 NPU build dependency 检查；没有修改生产构建逻辑。产物是 **Mac 的打包检查产物**，不是 A3 可部署 wheel。Mac 阶段的 Python 3.12 用于 CPU/打包检查，dlinfer 的运行时 Python 约束仍以 `setup.py:125` 的 `>=3.10,<3.12` 为准；后来 A3 镜像也使用 Python 3.12，其超出声明的限制已在文首单列。受支持环境下的重新构建仍待完成。
 
 A3 推理直接安装配套 LMDeploy，不需要安装本 dlinfer 分支。独立 dlinfer 算子用户继续按原安装方法准备 torch_npu/CANN/NNAL；不得把已删除的 LMDeploy Ascend patch 补回入口。两套环境分开验证，完整步骤见 [LMDeploy 迁移与硬件验收说明](https://github.com/silencelamb/lmdeploy/blob/codex/ascend-a3-native/docs/zh_cn/advance/ascend_a3_migration.md)。
 
-对 dlinfer 独立算子的 A3 追加验证，运行既有 attention/RoPE/SFA tests，并检查 >1024 专家的 eager 和真实 NPUGraph capture 都能运行；本次 CPU 分派测试未执行这些硬件计算。旧 LMDeploy + 旧 dlinfer 的参考环境须固定上面的迁移前 commit。
+后续扩大 A3 验证时，继续运行 attention/RoPE/SFA tests，并增加 >1024 专家模型的实际 shape 和负载；已执行的小维度 MoE 测试范围见文首。旧 LMDeploy + 旧 dlinfer 的参考环境须固定上面的迁移前 commit。
